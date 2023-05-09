@@ -5,8 +5,8 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import com.bot4s.telegram.api.declarative._
 import com.bot4s.telegram.cats.{Polling, TelegramBot}
-import com.bot4s.telegram.methods.{ParseMode, SendMessage, SetMyCommands}
-import com.bot4s.telegram.models.BotCommand
+import com.bot4s.telegram.methods.{ParseMode, SendMessage}
+import com.bot4s.telegram.models.{BotCommand, InlineKeyboardButton, InlineKeyboardMarkup}
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
@@ -26,8 +26,6 @@ class TerminBot(
     _ <- log.info("Bot has started !")
     _ <- IO.bothOutcome(processNotify(), startPolling())
   } yield ()
-
-  request(SetMyCommands(commands)).void
 
   onCommand("start" | "help") { implicit msg =>
     val name     = msg.from.map(_.firstName)
@@ -71,13 +69,7 @@ class TerminBot(
   private def processNotify(): IO[Unit] = fs2.Stream
     .fromQueueUnterminated(sendQ)
     .evalMapChunk { sub =>
-      request(
-        SendMessage(
-            chatId = sub.chatId
-          , text = notification(sub.termins)
-          , parseMode = Some(ParseMode.Markdown)
-        )
-      )
+      request(notification(sub))
     }
     .compile
     .drain
@@ -103,11 +95,21 @@ object TerminBot {
         |${commands.map(c => s"${c.command} - ${c.description}.").mkString("\n")}
         |""".stripMargin
 
-  private def notification(termins: List[Termin]): String =
-    s"""Please setup a session token first, [here](${TerminService.tokenUrl})
-       |
-       |Available termins:
-       |${termins.map(t => s"[${t.day}](${t.ref})").mkString("\n")}
-       |
-       |""".stripMargin
+  private def notification(sub: Subscription): SendMessage =
+    SendMessage(
+        chatId = sub.chatId
+      , text = s"""Available termins for last 30 sec.
+                  | Please setup a session token first, [here](${TerminService.tokenUrl})
+                  |""".stripMargin
+      , disableWebPagePreview = Some(true)
+      , replyMarkup = Some(
+        InlineKeyboardMarkup
+          .singleColumn(
+            sub.termins.map { term =>
+              InlineKeyboardButton.url(term.day, term.ref)
+            }
+          )
+      )
+      , parseMode = Some(ParseMode.Markdown)
+    )
 }
