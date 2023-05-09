@@ -99,7 +99,7 @@ object TerminBot {
     SendMessage(
         chatId = sub.chatId
       , text = s"""Available termins for last 30 sec.
-                  | Please setup a session token first, [here](${TerminService.tokenUrl})
+                  |Please setup a session token first, [here](${TerminService.tokenUrl})
                   |""".stripMargin
       , disableWebPagePreview = Some(true)
       , replyMarkup = Some(
