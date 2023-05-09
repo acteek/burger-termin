@@ -15,6 +15,7 @@
   <logger name="org.apache.kafka" level="WARN"/>
   <logger name="org.http4s" level="WARN"/>
   <logger name="fs2.kafka" level="WARN"/>
+  <logger name="com.bot4s.telegram.clients.SttpClient" level="WARN"/>
 
   <root level="WARN">
     <appender-ref ref="STDOUT"/>

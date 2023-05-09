@@ -10,6 +10,6 @@ trait Logging {
 
   private val slf4jLogger: slf4j.Logger = LoggerFactory.getLogger(getClass.getName.replace("$", ""))
 
-  protected implicit val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLoggerFromSlf4j[IO](slf4jLogger)
+  protected implicit val log: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLoggerFromSlf4j[IO](slf4jLogger)
 
 }

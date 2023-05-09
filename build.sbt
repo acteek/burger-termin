@@ -11,15 +11,21 @@ lazy val root = (project in file("."))
     , version      := "0.0.1-SNAPSHOT"
     , scalaVersion := "2.13.10"
     , libraryDependencies ++= Seq(
-        "org.http4s"       %% "http4s-ember-server" % Http4sVersion
-      , "org.http4s"       %% "http4s-ember-client" % Http4sVersion
-      , "org.http4s"       %% "http4s-circe"        % Http4sVersion
-      , "org.http4s"       %% "http4s-dsl"          % Http4sVersion
-      , "io.circe"         %% "circe-generic"       % CirceVersion
-      , "org.scalameta"    %% "munit"               % MunitVersion           % Test
-      , "org.typelevel"    %% "munit-cats-effect-3" % MunitCatsEffectVersion % Test
-      , "ch.qos.logback"    % "logback-classic"     % LogbackVersion         % Runtime
-      , "net.ruippeixotog" %% "scala-scraper"       % "3.1.0"
+        "org.http4s"                    %% "http4s-ember-server"           % Http4sVersion
+      , "org.http4s"                    %% "http4s-ember-client"           % Http4sVersion
+      , "org.http4s"                    %% "http4s-circe"                  % Http4sVersion
+      , "org.http4s"                    %% "http4s-dsl"                    % Http4sVersion
+      , "io.circe"                      %% "circe-generic"                 % CirceVersion
+      , "org.scalameta"                 %% "munit"                         % MunitVersion           % Test
+      , "org.typelevel"                 %% "munit-cats-effect-3"           % MunitCatsEffectVersion % Test
+      , "ch.qos.logback"                 % "logback-classic"               % LogbackVersion         % Runtime
+      , "net.ruippeixotog"              %% "scala-scraper"                 % "3.1.0"
+      , "com.bot4s"                     %% "telegram-core"                 % "5.6.3"
+      , "co.fs2"                        %% "fs2-core"                      % "3.6.1"
+      , "org.typelevel"                 %% "cats-effect"                   % "3.4.10"
+      , "com.softwaremill.sttp.client3" %% "core"                          % "3.8.13"
+      , "com.softwaremill.sttp.client3" %% "fs2"                           % "3.8.13"
+      , "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % "3.8.13"
     )
     , addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full)
     , addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")

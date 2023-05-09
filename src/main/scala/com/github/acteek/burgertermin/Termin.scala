@@ -7,7 +7,7 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
 import cats.implicits._
 
-case class Termin(title: String, ref: String)
+case class Termin(day: String, ref: String)
 object Termin {
   implicit val terminEncoder: Encoder[Termin] = deriveEncoder[Termin]
 
@@ -21,7 +21,8 @@ object Termin {
         val href  = el >?> attr("href")("a")
 
         (title, href).mapN { case (title, ref) =>
-          Termin(title, s"$baseUrl$ref")
+          val day = title.split(" ").head
+          Termin(day, s"$baseUrl$ref")
         }
 
       }
