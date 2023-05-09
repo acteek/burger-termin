@@ -29,7 +29,7 @@ class TerminBot(
 
   request(SetMyCommands(commands)).void
 
-  onCommand("start") { implicit msg =>
+  onCommand("start" | "help") { implicit msg =>
     val name     = msg.from.map(_.firstName)
     val response = greeting(name, commands)
     reply(text = response, parseMode = Some(ParseMode.Markdown)).void
