@@ -5,7 +5,7 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import com.bot4s.telegram.api.declarative._
 import com.bot4s.telegram.cats.{Polling, TelegramBot}
-import com.bot4s.telegram.methods.{ParseMode, SendMessage}
+import com.bot4s.telegram.methods.{ParseMode, SendMessage, SetMyCommands}
 import com.bot4s.telegram.models.{BotCommand, InlineKeyboardButton, InlineKeyboardMarkup}
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
@@ -27,10 +27,12 @@ class TerminBot(
     _ <- IO.bothOutcome(processNotify(), startPolling())
   } yield ()
 
-  onCommand("start" | "help") { implicit msg =>
+  onCommand("start") { implicit msg =>
     val name     = msg.from.map(_.firstName)
     val response = greeting(name, commands)
-    reply(text = response, parseMode = Some(ParseMode.Markdown)).void
+
+    request(SetMyCommands(commands)) *>
+      reply(text = response, parseMode = Some(ParseMode.Markdown)).void
   }
 
   onCommand("/subscribe") { implicit msg =>
@@ -83,16 +85,16 @@ object TerminBot {
 
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd.mm.yyyy")
   private val commands = List(
-      BotCommand("/subscribe", "Make subscription for termins any days")
-    , BotCommand("/subscribe dd.mm.yyyy", "Make subscription for particular day")
-    , BotCommand("/unsubscribe", "Delete all subscriptions")
+      BotCommand("start", "Main menu")
+    , BotCommand("subscribe", "Subscribe for termins any days")
+    , BotCommand("unsubscribe", "Delete subscription")
   )
 
   private def greeting(user: Option[String], commands: List[BotCommand]) =
     s"""|Hello${user.fold("")(u => s", ${u.capitalize}")}!
         |I can notify you of available termins for Berlin Bürgeramt,
         |support commands:
-        |${commands.map(c => s"${c.command} - ${c.description}.").mkString("\n")}
+        |${commands.map(c => s"/${c.command} - ${c.description}.").mkString("\n")}
         |""".stripMargin
 
   private def notification(sub: Subscription): SendMessage =
