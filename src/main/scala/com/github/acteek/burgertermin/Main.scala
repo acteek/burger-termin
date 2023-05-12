@@ -8,7 +8,9 @@ import org.http4s.ember.client.EmberClientBuilder
 object Main extends IOApp.Simple with Logging {
   def run: IO[Unit] =
     (for {
-      token   <- Resource.eval(IO.fromOption(sys.env.get("BOT_TOKEN"))(new RuntimeException("No TG token!")))
+      _       <- Resource.eval(log.info("App is starting..."))
+      _       <- Resource.eval(printRuntimeInfo)
+      token   <- Resource.eval(IO.fromOption(sys.env.get("BOT_TOKEN"))(new RuntimeException("BOT_TOKEN don't  set...")))
       client  <- EmberClientBuilder.default[IO].build
       store   <- Resource.eval(SubscriptionStore.memory)
       sendQ   <- Resource.eval(Queue.unbounded[IO, Subscription])
@@ -24,4 +26,14 @@ object Main extends IOApp.Simple with Logging {
       } yield ()
 
     }
+
+  private def printRuntimeInfo: IO[Unit] =
+    for {
+      runtime <- IO(Runtime.getRuntime)
+      mb            = 1024 * 1024
+      maxMemoryInMb = runtime.maxMemory() / mb
+      cpu           = runtime.availableProcessors()
+      _ <- log.info(s"JVM max memory: $maxMemoryInMb MB")
+      _ <- log.info(s"CPU available: $cpu")
+    } yield ()
 }
