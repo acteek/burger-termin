@@ -1,0 +1,6 @@
+apiVersion: v2
+name: burger-termin
+description: Berlin Burgeramt termin bot
+type: application
+version: 0.0.1
+appVersion: 0.0.1

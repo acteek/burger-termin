@@ -1,0 +1,13 @@
+
+replicas: 1
+botToken: {}
+image:
+  name: acteek/burger-termin
+  tag: main-7e7ec826
+resources:
+  limits:
+    cpu: '0.2'
+    memory: 512Mi
+  requests:
+    cpu: '0.2'
+    memory: 512Mi
