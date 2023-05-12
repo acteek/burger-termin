@@ -32,10 +32,13 @@ jobs:
       run: sbt compile
     - name: Dockerfile generate
       run: sbt Docker/stage
+    - name: Set outputs
+      id: vars
+      run: echo "image_tag=$GITHUB_REF_NAME-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
     - name: Docker image build
       run: |
-         docker build -t acteek/burger-termin:$IMAGE_TAG /target/docker/.
-         docker push acteek/burger-termin:$IMAGE_TAG
+         docker build -t acteek/burger-termin:${{ steps.vars.outputs.image_tag }} /target/docker/.
+         docker push acteek/burger-termin:${{ steps.vars.outputs.image_tag }}
 
 
   deploy:
@@ -55,11 +58,14 @@ jobs:
         id: install
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.CLUSTER_NAME }}
+      - name: Set outputs
+        id: vars
+        run: echo "image_tag=$GITHUB_REF_NAME-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Deploy to DigitalOcean Kubernetes
         run:  |
             helm template $GITHUB_WORKSPACE/helm/. \
             --namespace=stage \
-            --set image.tag=$IMAGE_TAG
+            --set image.tag=${{ steps.vars.outputs.image_tag }}
             --set botToken=${{secrets.BOT_TOKEN}} | kubectl apply -f -
       - name: Verify deployment
         run: kubectl rollout status deployment/burger-termin
