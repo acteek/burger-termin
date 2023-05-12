@@ -65,4 +65,4 @@ jobs:
             --set image.tag=${{ steps.vars.outputs.image_tag }} \
             --set botToken=${{secrets.BOT_TOKEN}} | kubectl apply -f -
       - name: Verify deployment
-        run: kubectl rollout status deployment/burger-termin
+        run: kubectl -n stage rollout status deployment/burger-termin
