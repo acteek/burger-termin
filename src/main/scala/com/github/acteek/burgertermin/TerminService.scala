@@ -7,7 +7,8 @@ import io.circe.syntax._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import cats.implicits._
-import fs2.{Stream, Pipe}
+import fs2.concurrent.Signal
+import fs2.{Pipe, Stream}
 import org.http4s.Method.GET
 import org.http4s.{RequestCookie, Uri}
 
@@ -15,7 +16,7 @@ import scala.concurrent.duration._
 
 trait TerminService[F[_]] {
   def getTermins: F[List[Termin]]
-  def startTerminMonitor(): IO[Unit]
+  def startTerminMonitor(stopWhen: Signal[IO, Boolean]): IO[Unit]
 }
 
 object TerminService extends Logging {
@@ -30,8 +31,16 @@ object TerminService extends Logging {
 
           private def setUpToken(): IO[Unit] =
             for {
-              token <- client.get(tokenUrl)(res => IO.pure(res.cookies.head.content))
-              _     <- ref.set(token)
+              tokenOpt <- client.get(tokenUrl)(res => IO.pure(res.cookies.head.content)).attempt.flatMap {
+                            case Right(token) =>
+                              log.info(s"Get new session token [$token]") *>
+                                IO.pure(Some(token))
+                            case Left(ex) =>
+                              log.error(s"Update token is failed, use prev: $ex") *>
+                                IO.pure(None)
+
+                          }
+              _ <- ref.update(old => tokenOpt.getOrElse(old))
             } yield ()
 
           private def printConsole(termins: List[Termin]): IO[Unit] =
@@ -72,7 +81,7 @@ object TerminService extends Logging {
               termins <- IO(Termin.parse(payload))
             } yield termins
 
-          def startTerminMonitor(): IO[Unit] = for {
+          def startTerminMonitor(stopWhen: Signal[IO, Boolean]): IO[Unit] = for {
             _ <- setUpToken()
             _ <- Stream
                    .fixedRateStartImmediately[IO](30.seconds)
@@ -82,12 +91,13 @@ object TerminService extends Logging {
                          case Right(termins) =>
                            printConsole(termins).as(termins)
                          case Left(err) =>
-                           log.warn(s"Error during update: $err") *>
+                           log.warn(s"Get termins try is failed: $err") *>
                              setUpToken().as(List.empty[Termin])
                        }
 
                    }
                    .through(process)
+                   .interruptWhen(stopWhen)
                    .compile
                    .drain
                    .start

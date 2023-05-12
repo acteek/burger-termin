@@ -7,6 +7,7 @@ import com.bot4s.telegram.api.declarative._
 import com.bot4s.telegram.cats.{Polling, TelegramBot}
 import com.bot4s.telegram.methods.{ParseMode, SendMessage, SetMyCommands}
 import com.bot4s.telegram.models.{BotCommand, InlineKeyboardButton, InlineKeyboardMarkup}
+import fs2.concurrent.{Signal, SignallingRef}
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
@@ -23,8 +24,12 @@ class TerminBot(
   import TerminBot._
 
   override def run(): IO[Unit] = for {
-    _ <- log.info("Bot has started !")
-    _ <- IO.bothOutcome(processNotify(), startPolling())
+    _      <- log.info("Bot is starting ...")
+    signal <- SignallingRef[IO].of(false)
+    _      <- processNotify(signal).start
+    poll   <- startPolling().start
+    _      <- poll.join.flatMap(_ => signal.set(true))
+    _      <- log.warn("Bot has stopped")
   } yield ()
 
   onCommand("start") { implicit msg =>
@@ -68,11 +73,22 @@ class TerminBot(
       log.info(s"$username has been canceled subscription chatId[$chatId]")
   }
 
-  private def processNotify(): IO[Unit] = fs2.Stream
+  onCommand("status") { implicit msg =>
+    store
+      .get(msg.chat.id)
+      .flatMap {
+        case Some(_) => reply(s"You have active subscription")
+        case None    => reply(s"You don't have active subscription")
+      }
+      .void
+  }
+
+  private def processNotify(stopWhen: Signal[IO, Boolean]): IO[Unit] = fs2.Stream
     .fromQueueUnterminated(sendQ)
     .evalMapChunk { sub =>
       request(notification(sub))
     }
+    .interruptWhen(stopWhen)
     .compile
     .drain
 
@@ -87,6 +103,7 @@ object TerminBot {
   private val commands = List(
       BotCommand("start", "Main menu")
     , BotCommand("subscribe", "Subscribe for termins any days")
+    , BotCommand("status", "Get active subscription")
     , BotCommand("unsubscribe", "Delete subscription")
   )
 
