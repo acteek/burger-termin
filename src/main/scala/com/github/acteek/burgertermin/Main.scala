@@ -10,7 +10,7 @@ object Main extends IOApp.Simple with Logging {
     (for {
       _       <- Resource.eval(log.info("App is starting..."))
       _       <- Resource.eval(printRuntimeInfo)
-      token   <- Resource.eval(IO.fromOption(sys.env.get("BOT_TOKEN"))(new RuntimeException("BOT_TOKEN don't  set...")))
+      token   <- Resource.eval(IO.fromOption(sys.env.get("BOT_TOKEN"))(new RuntimeException("BOT_TOKEN didn't set...")))
       client  <- EmberClientBuilder.default[IO].build
       store   <- Resource.eval(SubscriptionStore.memory)
       sendQ   <- Resource.eval(Queue.unbounded[IO, Subscription])
@@ -22,7 +22,7 @@ object Main extends IOApp.Simple with Logging {
         signal  <- SignallingRef[IO].of(false)
         _       <- service.startTerminMonitor(signal).start
         running <- bot.run().start
-        _       <- running.join.flatMap(_ => signal.set(true) *> log.warn("App has stopped"))
+        _       <- running.join.flatMap(_ => signal.set(true) *> log.info("App has stopped"))
       } yield ()
 
     }

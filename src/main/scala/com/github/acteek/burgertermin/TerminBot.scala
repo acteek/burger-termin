@@ -24,10 +24,10 @@ class TerminBot(
   import TerminBot._
 
   override def run(): IO[Unit] = for {
-    _      <- log.info("Bot is starting ...")
     signal <- SignallingRef[IO].of(false)
     _      <- processNotify(signal).start
     poll   <- startPolling().start
+    _      <- log.info("Bot has started")
     _      <- poll.join.flatMap(_ => signal.set(true))
     _      <- log.warn("Bot has stopped")
   } yield ()
@@ -93,6 +93,7 @@ class TerminBot(
     .drain
 
 }
+
 object TerminBot {
   def resource(token: String, store: SubscriptionStore[IO], sendQ: Queue[IO, Subscription]): Resource[IO, TerminBot] =
     HttpClientCatsBackend
