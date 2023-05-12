@@ -27,9 +27,9 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Run tests
-      run: sbt compie
-    - name: Docker image build
+    - name: Compile
+      run: sbt compile
+    - name: Build docker image
       run: sbt Docker/publish
     - name: Upload dependency graph
       uses: scalacenter/sbt-dependency-submission@ab086b50c947c9774b70f39fc7f6e20ca2706c91
