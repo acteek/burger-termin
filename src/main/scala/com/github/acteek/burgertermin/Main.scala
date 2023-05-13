@@ -5,6 +5,8 @@ import cats.effect.{IO, IOApp, Resource}
 import fs2.concurrent.SignallingRef
 import org.http4s.ember.client.EmberClientBuilder
 
+import scala.concurrent.duration._
+
 object Main extends IOApp.Simple with Logging {
   def run: IO[Unit] =
     (for {
@@ -20,7 +22,7 @@ object Main extends IOApp.Simple with Logging {
     } yield (bot, service)).use { case (bot, service) =>
       for {
         signal  <- SignallingRef[IO].of(false)
-        _       <- service.startTerminMonitor(signal).start
+        _       <- service.startTerminMonitor(signal, 1.minute).start
         running <- bot.run().start
         _       <- running.join.flatMap(_ => signal.set(true) *> log.info("App has stopped"))
       } yield ()

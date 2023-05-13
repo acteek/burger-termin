@@ -12,11 +12,11 @@ import fs2.{Pipe, Stream}
 import org.http4s.Method.GET
 import org.http4s.{RequestCookie, Uri}
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 
 trait TerminService[F[_]] {
   def getTermins: F[List[Termin]]
-  def startTerminMonitor(stopWhen: Signal[IO, Boolean]): IO[Unit]
+  def startTerminMonitor(stopWhen: Signal[IO, Boolean], timeout: FiniteDuration): IO[Unit]
 }
 
 object TerminService extends Logging {
@@ -81,10 +81,10 @@ object TerminService extends Logging {
               termins <- IO(Termin.parse(payload))
             } yield termins
 
-          def startTerminMonitor(stopWhen: Signal[IO, Boolean]): IO[Unit] = for {
+          def startTerminMonitor(stopWhen: Signal[IO, Boolean], timeout: FiniteDuration): IO[Unit] = for {
             _ <- setUpToken()
             _ <- Stream
-                   .fixedRateStartImmediately[IO](30.seconds)
+                   .fixedRateStartImmediately[IO](timeout)
                    .evalMap { _ =>
                      getTermins.attempt
                        .flatMap {
