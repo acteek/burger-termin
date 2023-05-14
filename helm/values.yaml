@@ -1,9 +1,15 @@
 
 replicas: 1
 botToken: {}
+
+redis:
+  host: {}
+  pass: {}
+
 image:
   name: acteek/burger-termin
   tag: main-7e7ec826
+
 resources:
   limits:
     cpu: '0.5'

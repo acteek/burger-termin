@@ -49,6 +49,8 @@ lazy val root = (project in file("."))
       , "com.softwaremill.sttp.client3" %% "core"                          % "3.8.13"
       , "com.softwaremill.sttp.client3" %% "fs2"                           % "3.8.13"
       , "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % "3.8.13"
+      , "dev.profunktor"                %% "redis4cats-effects"            % "1.4.1"
+      , "dev.profunktor"                %% "redis4cats-log4cats"           % "1.4.1"
     )
     , addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full)
     , addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")

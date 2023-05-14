@@ -1,6 +1,10 @@
 package com.github.acteek.burgertermin
 
+import cats.effect.kernel.Resource
 import cats.effect.{IO, Ref}
+import cats.implicits._
+import dev.profunktor.redis4cats.Redis
+import dev.profunktor.redis4cats.effect.Log
 
 trait SubscriptionStore[F[_]] {
   def put(chatId: Long, sub: String): F[Unit]
@@ -9,7 +13,8 @@ trait SubscriptionStore[F[_]] {
   def delete(chatId: Long): F[Unit]
 }
 
-object SubscriptionStore {
+object SubscriptionStore extends Logging {
+
   def memory: IO[SubscriptionStore[IO]] =
     Ref[IO]
       .of(Map.empty[Long, String])
@@ -21,4 +26,36 @@ object SubscriptionStore {
           def getAll: IO[List[(Long, String)]]         = ref.get.map(_.toList)
         }
       }
+
+  def redis(host: String, pass: String): Resource[IO, SubscriptionStore[IO]] =
+    Redis[IO]
+      .utf8(s"rediss://default:$pass@$host:25061")
+      .map { redis =>
+        new SubscriptionStore[IO] {
+          val pref: String = "sub"
+
+          def put(chatId: Long, sub: String): IO[Unit] = redis.set(s"$pref-$chatId", sub)
+          def get(chatId: Long): IO[Option[String]]    = redis.get(s"$pref-$chatId")
+
+          def getAll: IO[List[(Long, String)]] = for {
+            keys <- redis.keys(s"$pref-*")
+            res <- keys.traverseFilter { id =>
+                     redis
+                       .get(s"$pref-$id")
+                       .map(_.map(v => id.toLong -> v))
+                   }
+
+          } yield res
+
+          def delete(chatId: Long): IO[Unit] = redis.del(s"$pref-$chatId").void
+        }
+
+      }
+
+  implicit def redisLogs: Log[IO] = new Log[IO] {
+    def debug(msg: => String): IO[Unit] = log.debug(msg)
+    def error(msg: => String): IO[Unit] = log.error(msg)
+    def info(msg: => String): IO[Unit]  = log.info(msg)
+  }
+
 }

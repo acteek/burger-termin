@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory
 
 trait Logging {
 
-  private val slf4jLogger: slf4j.Logger = LoggerFactory.getLogger(getClass.getName.replace("$", ""))
+  protected val slf4jLogger: slf4j.Logger = LoggerFactory.getLogger(getClass.getName.replace("$", ""))
 
-  protected implicit val log: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLoggerFromSlf4j[IO](slf4jLogger)
+  implicit val log: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLoggerFromSlf4j[IO](slf4jLogger)
 
 }

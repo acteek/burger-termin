@@ -10,14 +10,16 @@ import scala.concurrent.duration._
 object Main extends IOApp.Simple with Logging {
   def run: IO[Unit] =
     (for {
-      _       <- Resource.eval(log.info("App is starting..."))
-      _       <- Resource.eval(printRuntimeInfo)
-      token   <- Resource.eval(IO.fromOption(sys.env.get("BOT_TOKEN"))(new RuntimeException("BOT_TOKEN didn't set...")))
-      client  <- EmberClientBuilder.default[IO].build
-      store   <- Resource.eval(SubscriptionStore.memory)
-      sendQ   <- Resource.eval(Queue.unbounded[IO, Subscription])
-      service <- Resource.eval(TerminService.impl(client, store, sendQ))
-      bot     <- TerminBot.resource(token, store, sendQ)
+      _         <- Resource.eval(log.info("App is starting..."))
+      _         <- Resource.eval(printRuntimeInfo)
+      token     <- Resource.eval(getEnvVar("BOT_TOKEN"))
+      redisHost <- Resource.eval(getEnvVar("REDIS_HOST"))
+      redisPass <- Resource.eval(getEnvVar("REDIS_PASS"))
+      client    <- EmberClientBuilder.default[IO].build
+      store     <- SubscriptionStore.redis(redisHost, redisPass)
+      sendQ     <- Resource.eval(Queue.unbounded[IO, Subscription])
+      service   <- Resource.eval(TerminService.impl(client, store, sendQ))
+      bot       <- TerminBot.resource(token, store, sendQ)
 
     } yield (bot, service)).use { case (bot, service) =>
       for {
@@ -38,4 +40,8 @@ object Main extends IOApp.Simple with Logging {
       _ <- log.info(s"JVM max memory: $maxMemoryInMb MB")
       _ <- log.info(s"CPU available: $cpu")
     } yield ()
+
+  private def getEnvVar(key: String): IO[String] =
+    IO.fromOption(sys.env.get(key))(new RuntimeException(s"$key didn't set..."))
+
 }
