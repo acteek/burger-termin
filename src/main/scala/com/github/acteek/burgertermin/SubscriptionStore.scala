@@ -39,10 +39,9 @@ object SubscriptionStore extends Logging {
 
           def getAll: IO[List[(Long, String)]] = for {
             keys <- redis.keys(s"$pref-*")
-            res <- keys.traverseFilter { id =>
-                     redis
-                       .get(s"$pref-$id")
-                       .map(_.map(v => id.toLong -> v))
+            res <- keys.traverseFilter { key =>
+                     val chatId = key.split("-").last.toLong
+                     redis.get(key).map(_.map(v => chatId -> v))
                    }
 
           } yield res
@@ -51,7 +50,6 @@ object SubscriptionStore extends Logging {
         }
 
       }
-
 
   implicit def redisLogs: Log[IO] = new Log[IO] {
     def debug(msg: => String): IO[Unit] = log.debug(msg)

@@ -67,10 +67,13 @@ object TerminService extends Logging {
                   _ <- subs.traverse_ {
                          case (chatId, "All") =>
                            val subscription = Subscription(chatId, termins)
-                           q.offer(subscription)
-                         case (chatId, day) =>
-                           val subscription = Subscription(chatId, termins.filter(_.day == day))
-                           q.offer(subscription)
+                           q.offer(subscription) *>
+                             log.info(s"Notify ${subscription.asJson.noSpaces}")
+                         case (chatId, days) =>
+                           val subscription = Subscription(chatId, termins.filter(t => days contains t.day))
+                           q.offer(subscription) *>
+                             log.info(s"Notify ${subscription.asJson.noSpaces}")
+
                        }
                 } yield ()
               }
