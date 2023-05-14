@@ -28,9 +28,9 @@ spec:
             - name: BOT_TOKEN
               value: {{ .Values.botToken | quote }}
             - name: REDIS_HOST
-              value: { { .Values.redis.host | quote } }
+              value: {{ .Values.redis.host | quote }}
             - name: REDIS_PASS
-              value: { { .Values.redis.pass | quote } }
+              value: {{ .Values.redis.pass | quote }}
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

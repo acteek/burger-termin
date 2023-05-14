@@ -52,7 +52,7 @@ object SubscriptionStore extends Logging {
 
       }
 
-  
+
   implicit def redisLogs: Log[IO] = new Log[IO] {
     def debug(msg: => String): IO[Unit] = log.debug(msg)
     def error(msg: => String): IO[Unit] = log.error(msg)
