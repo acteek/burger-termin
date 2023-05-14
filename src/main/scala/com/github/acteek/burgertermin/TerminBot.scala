@@ -77,7 +77,7 @@ class TerminBot(
     store
       .get(msg.chat.id)
       .flatMap {
-        case Some(_) => reply(s"You have active subscription")
+        case Some(sub) => reply(s"You have active subscription for $sub")
         case None    => reply(s"You don't have active subscription")
       }
       .void
