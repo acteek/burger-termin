@@ -70,9 +70,13 @@ object TerminService extends Logging {
                            q.offer(subscription) *>
                              log.info(s"Notify ${subscription.asJson.noSpaces}")
                          case (chatId, days) =>
-                           val subscription = Subscription(chatId, termins.filter(t => days contains t.day))
-                           q.offer(subscription) *>
-                             log.info(s"Notify ${subscription.asJson.noSpaces}")
+                           termins.filter(t => days contains t.day) match {
+                             case Nil => IO.unit
+                             case terms =>
+                               val subscription = Subscription(chatId, terms)
+                               q.offer(subscription) *>
+                                 log.info(s"Notify ${subscription.asJson.noSpaces}")
+                           }
 
                        }
                 } yield ()
