@@ -5,21 +5,18 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import com.bot4s.telegram.api.declarative._
 import com.bot4s.telegram.cats.{Polling, TelegramBot}
-import com.bot4s.telegram.methods.{ParseMode, SendMessage, SetMyCommands}
+import com.bot4s.telegram.methods.{DeleteMessage, EditMessageReplyMarkup, ParseMode, SendMessage, SetMyCommands}
 import com.bot4s.telegram.models.{BotCommand, InlineKeyboardButton, InlineKeyboardMarkup}
 import fs2.concurrent.{Signal, SignallingRef}
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
-
-import java.time.format.DateTimeFormatter
-import scala.util.{Failure, Success, Try}
 
 class TerminBot(
       token: String
     , backend: SttpBackend[IO, Any]
     , store: SubscriptionStore[IO]
     , sendQ: Queue[IO, Subscription]
-) extends TelegramBot[IO](token, backend) with Polling[IO] with Commands[IO] with Logging {
+) extends TelegramBot[IO](token, backend) with Polling[IO] with Commands[IO] with Callbacks[IO] with Logging {
 
   import TerminBot._
 
@@ -41,27 +38,39 @@ class TerminBot(
   }
 
   onCommand("/subscribe") { implicit msg =>
-    val chatId   = msg.chat.id
-    val username = msg.from.fold("")(_.firstName)
-    withArgs {
-      case Seq(day) =>
-        Try(dateTimeFormatter.parse(day)) match {
-          case Success(_) =>
-            store.put(chatId, day) *>
-              reply(s"Subscription for $day created") *>
-              log.info(s"$username has made subscription chatId[$chatId] for [$day]")
-          case Failure(_) =>
-            reply("Wrong date format, please use dd.mm.yyyy") *>
-              log.warn(s"Wrong date format for [$day]")
+    val keyboard = Utils.buildDaysKeys(offset = 0)
+    reply("Pick a day", replyMarkup = Some(keyboard)).void
+  }
 
-        }
+  onCallbackWithTag("subscribe_") { implicit cbq =>
+    for {
+      date   <- IO.pure(cbq.data.fold("All")(_.trim))
+      chatId <- IO.pure(cbq.message.map(_.source).getOrElse(0L))
+      msgId  <- IO.pure(cbq.message.map(_.messageId).getOrElse(0))
+      _      <- store.put(chatId, date)
+      _      <- log.info(s"${cbq.from.firstName} has made subscription chatId[$chatId] for [$date]")
+      _ <- ackCallback(Some("Update successfully!"))
+      _ <- request(DeleteMessage(chatId = chatId, messageId = msgId))
+      _ <- request(SendMessage(chatId = chatId, text = s"You have subscribed for $date"))
+    } yield ()
 
-      case _ =>
-        store.put(chatId, "All") *>
-          reply("Subscription for all days created!") *>
-          log.info(s"$username has made subscription chatId[$chatId] for all days")
+  }
 
-    }
+  onCallbackWithTag("month_") { implicit cbq =>
+    for {
+      offset <- IO.pure(cbq.data.fold(0)(_.toInt))
+      chatId <- IO.pure(cbq.message.map(_.source).getOrElse(0L))
+      msgId  <- IO.pure(cbq.message.map(_.messageId).getOrElse(0))
+      keyboard = Utils.buildDaysKeys(offset)
+      _ <- request(
+             EditMessageReplyMarkup(
+                 chatId = Some(chatId)
+               , messageId = Some(msgId)
+               , replyMarkup = Some(keyboard)
+             )
+           )
+    } yield ()
+
   }
 
   onCommand("unsubscribe") { implicit msg =>
@@ -78,7 +87,7 @@ class TerminBot(
       .get(msg.chat.id)
       .flatMap {
         case Some(sub) => reply(s"You have active subscription for $sub")
-        case None    => reply(s"You don't have active subscription")
+        case None      => reply(s"You don't have active subscription")
       }
       .void
   }
@@ -100,7 +109,6 @@ object TerminBot {
       .resource[IO]()
       .map(backend => new TerminBot(token, backend, store, sendQ))
 
-  private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd.mm.yyyy")
   private val commands = List(
       BotCommand("start", "Main menu")
     , BotCommand("subscribe", "Subscribe for termins any days")
@@ -118,7 +126,7 @@ object TerminBot {
   private def notification(sub: Subscription): SendMessage =
     SendMessage(
         chatId = sub.chatId
-      , text = s"""Available termins for last 30 sec.
+      , text = s"""Available termins for last 1 min.
                   |Please setup a session token first, [here](${TerminService.tokenUrl})
                   |""".stripMargin
       , disableWebPagePreview = Some(true)
