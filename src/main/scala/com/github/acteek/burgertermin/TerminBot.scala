@@ -111,7 +111,7 @@ object TerminBot {
 
   private val commands = List(
       BotCommand("start", "Main menu")
-    , BotCommand("subscribe", "Subscribe for termins any days")
+    , BotCommand("subscribe", "Make subscription")
     , BotCommand("status", "Get active subscription")
     , BotCommand("unsubscribe", "Delete subscription")
   )
@@ -119,7 +119,8 @@ object TerminBot {
   private def greeting(user: Option[String], commands: List[BotCommand]) =
     s"""|Hello${user.fold("")(u => s", ${u.capitalize}")}!
         |I can notify you of available termins for Berlin Bürgeramt,
-        |support commands:
+        |
+        |Commands:
         |${commands.map(c => s"/${c.command} - ${c.description}.").mkString("\n")}
         |""".stripMargin
 
