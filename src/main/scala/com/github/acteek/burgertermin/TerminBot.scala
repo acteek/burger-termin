@@ -37,9 +37,28 @@ class TerminBot(
       reply(text = response, parseMode = Some(ParseMode.Markdown)).void
   }
 
-  onCommand("/subscribe") { implicit msg =>
+  onCommand("status") { implicit msg =>
+    store
+      .get(msg.chat.id)
+      .flatMap {
+        case Some(sub) => reply(s"You have active subscription for $sub")
+        case None      => reply(s"You don't have active subscription")
+      }
+      .void
+  }
+
+  onCommand("subscribe") { implicit msg =>
     val keyboard = Utils.buildDaysKeys(offset = 0)
     reply("Pick a day", replyMarkup = Some(keyboard)).void
+  }
+
+  onCommand("unsubscribe") { implicit msg =>
+    val chatId   = msg.chat.id
+    val username = msg.from.fold("NoName")(_.firstName)
+
+    store.delete(msg.chat.id) *>
+      reply("Subscription has been canceled") *>
+      log.info(s"$username has been canceled subscription chatId[$chatId]")
   }
 
   onCallbackWithTag("subscribe_") { implicit cbq =>
@@ -49,9 +68,9 @@ class TerminBot(
       msgId  <- IO.pure(cbq.message.map(_.messageId).getOrElse(0))
       _      <- store.put(chatId, date)
       _      <- log.info(s"${cbq.from.firstName} has made subscription chatId[$chatId] for [$date]")
-      _ <- ackCallback(Some("Update successfully!"))
-      _ <- request(DeleteMessage(chatId = chatId, messageId = msgId))
-      _ <- request(SendMessage(chatId = chatId, text = s"You have subscribed for $date"))
+      _      <- ackCallback(Some("Update successfully!"))
+      _      <- request(DeleteMessage(chatId = chatId, messageId = msgId))
+      _      <- request(SendMessage(chatId = chatId, text = s"You have subscribed for $date"))
     } yield ()
 
   }
@@ -71,25 +90,6 @@ class TerminBot(
            )
     } yield ()
 
-  }
-
-  onCommand("unsubscribe") { implicit msg =>
-    val chatId   = msg.chat.id
-    val username = msg.from.fold("NoName")(_.firstName)
-
-    store.delete(msg.chat.id) *>
-      reply("Subscription has been canceled") *>
-      log.info(s"$username has been canceled subscription chatId[$chatId]")
-  }
-
-  onCommand("status") { implicit msg =>
-    store
-      .get(msg.chat.id)
-      .flatMap {
-        case Some(sub) => reply(s"You have active subscription for $sub")
-        case None      => reply(s"You don't have active subscription")
-      }
-      .void
   }
 
   private def processNotify(stopWhen: Signal[IO, Boolean]): IO[Unit] = fs2.Stream
