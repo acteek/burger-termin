@@ -24,7 +24,7 @@ object Main extends IOApp.Simple with Logging {
     } yield (bot, service)).use { case (bot, service) =>
       for {
         signal  <- SignallingRef[IO].of(false)
-        _       <- service.startTerminMonitor(signal, 1.minute).start
+        _       <- service.startTerminMonitor(signal, 5.minute).start
         running <- bot.run().start
         _       <- running.join.flatMap(_ => signal.set(true) *> log.info("App has stopped"))
       } yield ()
