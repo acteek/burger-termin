@@ -33,10 +33,6 @@ lazy val root = (project in file("."))
     , Docker / daemonGroup    := "boris"
     , Docker / daemonGroupGid := Some("1000")
     , dockerChmodType         := DockerChmodType.UserGroupWriteExecute
-    , excludeDependencies ++= Seq(
-        ExclusionRule("ch.qos.logback", "logback-classic")
-      , ExclusionRule("org.slf4j")
-    )
     , libraryDependencies ++= Seq(
         "org.http4s"    %% "http4s-ember-server" % Http4sVersion
       , "org.http4s"    %% "http4s-ember-client" % Http4sVersion
