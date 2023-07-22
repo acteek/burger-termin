@@ -24,6 +24,7 @@ lazy val root = (project in file("."))
     , dockerBaseImage         := "openjdk:21-slim-bullseye"
     , git.formattedShaVersion := git.gitHeadCommit.value map (sha => s"${git.gitCurrentBranch.value}-${sha.take(8)}")
     , dockerUsername          := Some("acteek")
+    , dockerRepository        := Some("registry.digitalocean.com")
     , dockerExposedPorts ++= Seq(1099)
     , dockerUpdateLatest      := true
     , dockerEnvVars           := Map("JAVA_OPTS" -> runJavaOptions.mkString(" "))
