@@ -1,6 +1,6 @@
 package com.github.acteek.burgertermin
 
-import cats.effect.IO
+import cats.effect.{IO, Outcome}
 import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import com.bot4s.telegram.api.declarative._
@@ -25,8 +25,11 @@ class TerminBot(
     _      <- processNotify(signal).start
     poll   <- startPolling().start
     _      <- log.info("Bot has started")
-    _      <- poll.join.flatMap(_ => signal.set(true))
-    _      <- log.warn("Bot has stopped")
+    _      <- poll.join.flatMap{
+      case Outcome.Errored(_) => startPolling().start
+      case _ => signal.set(true)
+    }
+    _      <- log.info("Bot has stopped")
   } yield ()
 
   onCommand("start") { implicit msg =>
