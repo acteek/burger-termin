@@ -16,7 +16,7 @@ class TerminBot(
     , backend: SttpBackend[IO, Any]
     , store: SubscriptionStore[IO]
     , sendQ: Queue[IO, Subscription]
-) extends TelegramBot[IO](token, backend) with Polling[IO] with Commands[IO] with Callbacks[IO] with Logging {
+) extends TelegramBot[IO](token, backend) with Polling[IO] with Commands[IO] with Callbacks[IO]  {
 
   import TerminBot._
 

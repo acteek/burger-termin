@@ -13,7 +13,7 @@ trait SubscriptionStore[F[_]] {
   def delete(chatId: Long): F[Unit]
 }
 
-object SubscriptionStore extends Logging {
+object SubscriptionStore {
 
   def memory: IO[SubscriptionStore[IO]] =
     Ref[IO]

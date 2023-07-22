@@ -7,7 +7,7 @@ import org.http4s.ember.client.EmberClientBuilder
 
 import scala.concurrent.duration._
 
-object Main extends IOApp.Simple with Logging {
+object Main extends IOApp.Simple {
   def run: IO[Unit] =
     (for {
       _         <- Resource.eval(log.info("App is starting..."))

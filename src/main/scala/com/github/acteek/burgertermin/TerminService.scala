@@ -19,7 +19,7 @@ trait TerminService[F[_]] {
   def startTerminMonitor(stopWhen: Signal[IO, Boolean], timeout: FiniteDuration): IO[Unit]
 }
 
-object TerminService extends Logging {
+object TerminService {
   private val burgList = burgerms.mkString(",")
   val tokenUrl = s"$baseUrl/terminvereinbarung/termin/tag.php?termin=1&anliegen=120686&dienstleisterlist=$burgList"
 

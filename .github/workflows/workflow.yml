@@ -21,7 +21,6 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Log in to DO Container Registry
         run: doctl registry login --expiry-seconds 600
-      - uses: actions/checkout@v3
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
@@ -37,8 +36,8 @@ jobs:
         run: echo "image_tag=$GITHUB_REF_NAME-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Docker image build
         run: |
-           docker build -t acteek/burger-termin:${{ steps.vars.outputs.image_tag }} $GITHUB_WORKSPACE/target/docker/stage/.
-          docker push acteek/burger-termin:${{ steps.vars.outputs.image_tag }}
+          docker build -t registry.digitalocean.com/acteek/burger-termin:${{ steps.vars.outputs.image_tag }} $GITHUB_WORKSPACE/target/docker/stage/.
+          docker push registry.digitalocean.com/acteek/burger-termin:${{ steps.vars.outputs.image_tag }}
 
 
   deploy:
@@ -62,12 +61,12 @@ jobs:
         id: vars
         run: echo "image_tag=$GITHUB_REF_NAME-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - name: Deploy to DigitalOcean Kubernetes
-        run:  |
-            helm template $GITHUB_WORKSPACE/helm/. \
-            --namespace=stage \
-            --set image.tag=${{ steps.vars.outputs.image_tag }} \
-            --set botToken=${{secrets.BOT_TOKEN}} \
-            --set redis.host=${{secrets.REDIS_HOST}} \
-            --set redis.pass=${{secrets.REDIS_PASS}} | kubectl apply -f -
+        run: |
+          helm template $GITHUB_WORKSPACE/helm/. \
+          --namespace=stage \
+          --set image.tag=${{ steps.vars.outputs.image_tag }} \
+          --set botToken=${{secrets.BOT_TOKEN}} \
+          --set redis.host=${{secrets.REDIS_HOST}} \
+          --set redis.pass=${{secrets.REDIS_PASS}} | kubectl apply -f -
       - name: Verify deployment
         run: kubectl -n stage rollout status deployment/burger-termin

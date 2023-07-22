@@ -1,5 +1,7 @@
 package com.github.acteek
 
+import cats.effect.IO
+
 package object burgertermin {
 
   val baseUrl = "https://service.berlin.de"
@@ -12,4 +14,11 @@ package object burgertermin {
     327332, 317869, 122281, 327352, 122279, 329772, 122283, 122276, 327324, 122274, 327326, 122267, 329766, 122246,
     327318, 122251, 327320, 122257, 327322, 122208, 327298, 122226, 327300
   )
+
+  implicit val log: Logging = new Logging {
+    def debug(msg: String): IO[Unit] = IO.println(s"DEBUG | $msg")
+    def info(msg: String): IO[Unit] = IO.println(s"INFO | $msg")
+    def warn(msg: String): IO[Unit] = IO.println(s"WARN | $msg")
+    def error(msg: String): IO[Unit] = IO.println(s"ERROR | $msg")
+  }
 }

@@ -16,15 +16,14 @@ lazy val runJavaOptions = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-      organization            := "com.github.acteek"
-    , name                    := "burger-termin"
-    , scalaVersion            := "2.13.10"
-    , run / fork              := true
-    , dockerApiVersion        := Some(DockerApiVersion(1, 40))
-    , dockerBaseImage         := "openjdk:21-slim-bullseye"
-    , git.formattedShaVersion := git.gitHeadCommit.value map (sha => s"${git.gitCurrentBranch.value}-${sha.take(8)}")
-    , dockerUsername          := Some("acteek")
-    , dockerRepository        := Some("registry.digitalocean.com")
+      organization     := "com.github.acteek"
+    , name             := "burger-termin"
+    , scalaVersion     := "2.13.10"
+    , run / fork       := true
+    , dockerApiVersion := Some(DockerApiVersion(1, 40))
+    , dockerBaseImage  := "openjdk:21-slim-bullseye"
+    , dockerUsername   := Some("acteek")
+    , dockerRepository := Some("registry.digitalocean.com")
     , dockerExposedPorts ++= Seq(1099)
     , dockerUpdateLatest      := true
     , dockerEnvVars           := Map("JAVA_OPTS" -> runJavaOptions.mkString(" "))
@@ -34,15 +33,18 @@ lazy val root = (project in file("."))
     , Docker / daemonGroup    := "boris"
     , Docker / daemonGroupGid := Some("1000")
     , dockerChmodType         := DockerChmodType.UserGroupWriteExecute
+    , excludeDependencies ++= Seq(
+        ExclusionRule("ch.qos.logback", "logback-classic")
+      , ExclusionRule("org.slf4j")
+    )
     , libraryDependencies ++= Seq(
-        "org.http4s"                    %% "http4s-ember-server"           % Http4sVersion
-      , "org.http4s"                    %% "http4s-ember-client"           % Http4sVersion
-      , "org.http4s"                    %% "http4s-circe"                  % Http4sVersion
-      , "org.http4s"                    %% "http4s-dsl"                    % Http4sVersion
-      , "io.circe"                      %% "circe-generic"                 % CirceVersion
-      , "org.scalameta"                 %% "munit"                         % MunitVersion           % Test
-      , "org.typelevel"                 %% "munit-cats-effect-3"           % MunitCatsEffectVersion % Test
-      , "ch.qos.logback"                 % "logback-classic"               % LogbackVersion         % Runtime
+        "org.http4s"    %% "http4s-ember-server" % Http4sVersion
+      , "org.http4s"    %% "http4s-ember-client" % Http4sVersion
+      , "org.http4s"    %% "http4s-circe"        % Http4sVersion
+      , "org.http4s"    %% "http4s-dsl"          % Http4sVersion
+      , "io.circe"      %% "circe-generic"       % CirceVersion
+      , "org.scalameta" %% "munit"               % MunitVersion           % Test
+      , "org.typelevel" %% "munit-cats-effect-3" % MunitCatsEffectVersion % Test
       , "net.ruippeixotog"              %% "scala-scraper"                 % "3.1.0"
       , "com.bot4s"                     %% "telegram-core"                 % "5.6.3"
       , "co.fs2"                        %% "fs2-core"                      % "3.6.1"
@@ -57,4 +59,4 @@ lazy val root = (project in file("."))
     , addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
     , testFrameworks += new TestFramework("munit.Framework")
   )
-  .enablePlugins(JavaAppPackaging, DockerPlugin, GitVersioning)
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
