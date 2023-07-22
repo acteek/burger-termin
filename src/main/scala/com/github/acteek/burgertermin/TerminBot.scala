@@ -11,6 +11,7 @@ import fs2.concurrent.{Signal, SignallingRef}
 import sttp.client3.SttpBackend
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
 
+
 class TerminBot(
       token: String
     , backend: SttpBackend[IO, Any]
