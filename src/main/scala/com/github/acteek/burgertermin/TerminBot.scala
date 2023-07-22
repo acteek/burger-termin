@@ -16,7 +16,7 @@ class TerminBot(
     , backend: SttpBackend[IO, Any]
     , store: SubscriptionStore[IO]
     , sendQ: Queue[IO, Subscription]
-) extends TelegramBot[IO](token, backend) with Polling[IO] with Commands[IO] with Callbacks[IO]  {
+) extends TelegramBot[IO](token, backend) with Polling[IO] with Commands[IO] with Callbacks[IO] {
 
   import TerminBot._
 
@@ -25,11 +25,11 @@ class TerminBot(
     _      <- processNotify(signal).start
     poll   <- startPolling().start
     _      <- log.info("Bot has started")
-    _      <- poll.join.flatMap{
-      case Outcome.Errored(_) => startPolling().start
-      case _ => signal.set(true)
-    }
-    _      <- log.info("Bot has stopped")
+    _ <- poll.join.flatMap {
+           case Outcome.Errored(_) => startPolling().start
+           case _                  => signal.set(true)
+         }
+    _ <- log.info("Bot has stopped")
   } yield ()
 
   onCommand("start") { implicit msg =>
