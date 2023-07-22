@@ -38,3 +38,5 @@ spec:
           securityContext:
             runAsGroup: 1000
             runAsUser: 1000
+      imagePullSecrets:
+        - name: acteek
