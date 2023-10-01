@@ -28,6 +28,7 @@ object TerminMonitor {
         new TerminMonitor[IO] with Http4sClientDsl[IO] {
 
           def start(timeout: FiniteDuration): IO[Unit] = for {
+            _ <- log.info("Termin monitor has started")
             _ <- setUpToken()
             _ <- Stream
                    .fixedRateStartImmediately[IO](timeout)
@@ -48,6 +49,7 @@ object TerminMonitor {
                    }
                    .unNone
                    .evalMapChunk(q.offer)
+                   .onFinalize(log.info("Termin monitor has ended"))
                    .compile
                    .drain
                    .start
