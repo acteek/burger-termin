@@ -1,8 +1,6 @@
-package com.github.acteek
+package com.github.acteek.burgertermin
 
-import cats.effect.IO
-
-package object burgertermin {
+package object termins {
 
   val baseUrl = "https://service.berlin.de"
 
@@ -15,10 +13,7 @@ package object burgertermin {
     327318, 122251, 327320, 122257, 327322, 122208, 327298, 122226, 327300
   )
 
-  implicit val log: Logging = new Logging {
-    def debug(msg: String): IO[Unit] = IO.println(s"DEBUG | $msg")
-    def info(msg: String): IO[Unit] = IO.println(s"INFO | $msg")
-    def warn(msg: String): IO[Unit] = IO.println(s"WARN | $msg")
-    def error(msg: String): IO[Unit] = IO.println(s"ERROR | $msg")
-  }
+  private val burgList = burgerms.mkString(",")
+  val tokenUrl = s"$baseUrl/terminvereinbarung/termin/tag.php?termin=1&anliegen=120686&dienstleisterlist=$burgList"
+
 }

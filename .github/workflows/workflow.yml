@@ -65,7 +65,7 @@ jobs:
           helm template $GITHUB_WORKSPACE/helm/. \
           --namespace=stage \
           --set image.tag=${{ steps.vars.outputs.image_tag }} \
-          --set botToken=${{secrets.BOT_TOKEN}} \
+          --set telegram.token=${{secrets.BOT_TOKEN}} \
           --set redis.host=${{secrets.REDIS_HOST}} \
           --set redis.pass=${{secrets.REDIS_PASS}} | kubectl apply -f -
       - name: Verify deployment

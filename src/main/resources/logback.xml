@@ -5,7 +5,7 @@
     <encoder>
       <charset>UTF-8</charset>
       <pattern>
-        %yellow(%d{dd/MMM/YYYY HH:mm:ss.SSS}) %highlight(%-5level) %cyan(%logger{36}) - %msg%n
+        %yellow(%d{dd-MMM-YYYY HH:mm:ss.SSS}) %highlight(%-5level) %cyan(%logger{36}) - %msg%n
       </pattern>
     </encoder>
   </appender>

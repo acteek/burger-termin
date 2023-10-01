@@ -25,18 +25,23 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: BOT_TOKEN
-              value: {{ .Values.botToken | quote }}
-            - name: REDIS_HOST
-              value: {{ .Values.redis.host | quote }}
-            - name: REDIS_PASS
-              value: {{ .Values.redis.pass | quote }}
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          args:
+            - -J-Dconfig.file=/etc/config/application.conf
+            - -J-Dlogback.configurationFile=/etc/config/logback.xml
           securityContext:
             runAsGroup: 1000
             runAsUser: 1000
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+              readOnly: true
       imagePullSecrets:
         - name: acteek
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Chart.Name }}

@@ -1,10 +1,14 @@
-
 replicas: 1
-botToken: {}
+updatePeriod: 5m
+logLevel: INFO
+
+telegram:
+  token: {}
 
 redis:
-  host: {}
-  pass: {}
+  host: 127.0.0.1
+  port: 25061
+  pass: ""
 
 image:
   name: registry.digitalocean.com/acteek/burger-termin
