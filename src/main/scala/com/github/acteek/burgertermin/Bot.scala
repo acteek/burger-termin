@@ -42,12 +42,15 @@ class Bot(
   def startProcessUpdates(): IO[Unit] = Stream
     .fromQueueUnterminated(sendQ)
     .evalMapChunk { update =>
-      store.getAll.flatMap { chatIds =>
-        chatIds.traverse { id =>
-          val msg = Bot.notify(id, update)
-          request(msg)
-        }
-      }
+      for {
+        chatIds <- store.getAll
+        _ <- chatIds.traverse { id =>
+               val msg = Bot.notify(id, update)
+               log
+                 .info(s"Notify chatId [$id]")
+                 .flatMap(_ => request(msg))
+             }
+      } yield ()
 
     }
     .compile
@@ -68,7 +71,7 @@ class Bot(
       .get(msg.chat.id)
       .flatMap {
         case Some(_) => reply(s"Subscription is active")
-        case None      => reply(s"You don't have active subscription")
+        case None    => reply(s"You don't have active subscription")
       }
       .void
   }
