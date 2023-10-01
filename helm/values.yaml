@@ -3,7 +3,7 @@ updatePeriod: 5m
 logLevel: INFO
 
 telegram:
-  token: {}
+  token: "my_awesome_token"
 
 redis:
   host: 127.0.0.1

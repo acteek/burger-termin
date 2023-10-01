@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   application.conf: |
-    update-period = {{ .Values.updatePeriod }}
+    update-period: {{ .Values.updatePeriod }}
 
     redis {
       host: {{ .Values.redis.host | quote }}
@@ -24,18 +24,16 @@ data:
             <encoder>
                 <charset>UTF-8</charset>
                 <pattern>
-                    %yellow(%d{dd-MMM-YYYY HH:mm:ss.SSS}) %highlight(%-5level) %cyan(%logger{36}) - %msg%n
+                    %yellow(%d{dd-MMM-YYYY HH:mm:ss.SSS}) %highlight(%-5level) %thread %cyan(%logger{36}) - %msg%n
                 </pattern>
             </encoder>
         </appender>
 
         <logger name="com.github.acteek" level={{ .Values.logLevel | quote }}/>
-        <logger name="org.apache.kafka" level="WARN"/>
         <logger name="org.http4s" level="WARN"/>
-        <logger name="fs2.kafka" level="WARN"/>
         <logger name="com.bot4s.telegram.clients.SttpClient" level="WARN"/>
 
         <root level="WARN">
-            <appender-ref ref="jsonConsole"/>
+            <appender-ref ref="STDOUT"/>
         </root>
     </configuration>
