@@ -58,7 +58,7 @@ object TerminMonitor {
             for {
               tokenOpt <- client.get(tokenUrl)(res => IO.pure(res.cookies.head.content)).attempt.flatMap {
                             case Right(token) =>
-                              log.info(s"Get new session token [$token]") *>
+                              log.debug(s"Get new session token [$token]") *>
                                 IO.pure(Some(token))
                             case Left(ex) =>
                               log.error(s"Update token is failed, use prev: $ex") *>

@@ -67,7 +67,7 @@ class Bot(
     store
       .get(msg.chat.id)
       .flatMap {
-        case Some(sub) => reply(s"You have active subscription for $sub")
+        case Some(_) => reply(s"Subscription is active")
         case None      => reply(s"You don't have active subscription")
       }
       .void
